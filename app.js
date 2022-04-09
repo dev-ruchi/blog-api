@@ -1,9 +1,14 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const yup = require('yup')
+require('dotenv').config()
 
 const app = express()
 
-
+mongoose.connect(process.env.MONGODB_URI)
+.catch (function(e) {
+   console.log('failed to connect to database', e)
+})  
 app.use(express.json())
 
 app.post('/sign-up', async (req, res) => {
