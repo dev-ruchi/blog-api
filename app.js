@@ -2,6 +2,8 @@ const express = require('express')
 const mongoose = require('mongoose')
 const yup = require('yup')
 const User = require('./models/User')
+const bcrypt = require('bcrypt')
+const { compareSync } = require('bcrypt')
 require('dotenv').config()
 
 const app = express()
@@ -24,9 +26,19 @@ app.post('/sign-up', async (req, res) => {
     return res.json(e.errors)
   }
 
-  User.create(req.body)
+  if (await User.exists({ email: req.body.email }).exec()) {
+    return res.json({
+      error: "This email is already used"
+    })
+  }
 
-  return res.json(req.body)
+  let userData = req.body
+
+  userData.password = await bcrypt.hash(userData.password, 10);
+
+  User.create(userData)
+
+  return res.json(userData)
 })
 
 app.post('/log-in', async (req, res) => {
@@ -40,7 +52,14 @@ app.post('/log-in', async (req, res) => {
     return res.json(e.errors)
   }
 
-  return res.json(req.body)
+  const user = await User.findOne({ email: req.body.email }).exec()
+
+  if (!user) return res.status(404).json({ error: "User not found" })
+  
+
+  if (!bcrypt.compareSync(req.body.password, user.password)) return res.status(404).json({ error: "Incorrect password" })
+
+  return res.json(user)
 })
 
 app.listen(8000, function () {
