@@ -1,6 +1,7 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const yup = require('yup')
+const User = require('./models/User')
 require('dotenv').config()
 
 const app = express()
@@ -22,6 +23,8 @@ app.post('/sign-up', async (req, res) => {
   } catch (e) {
     return res.json(e.errors)
   }
+
+  User.create(req.body)
 
   return res.json(req.body)
 })
