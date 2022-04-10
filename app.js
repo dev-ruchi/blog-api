@@ -91,7 +91,7 @@ app.get('/posts', async (req, res) => {
 })
 
 app.get('/posts/:slug', async (req, res) => {
-  return res.json(await Post.findOne({ slug: req.params.slug }).exec())
+  return res.json(await Post.findOne({ slug: req.params.slug }).populate('user', 'name').exec())
 })
 
 app.put('/posts/:id', async (req, res) => {
