@@ -1,11 +1,11 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const yup = require('yup')
-const User = require('./models/User')
-const bcrypt = require('bcrypt')
-const Post = require('./models/Posts')
+
 const cors = require('cors')
 require('dotenv').config()
+
+const authRoutes = require('./routes/auth')
+const postRoutes = require('./routes/post')
 
 const app = express()
 
@@ -18,104 +18,9 @@ app.use(cors())
 
 app.use(express.json())
 
-app.post('/sign-up', async (req, res) => {
-  try {
-    await yup.object({
-      name: yup.string().required().min(3),
-      email: yup.string().email(),
-      password: yup.string().required().min(6)
-    })
-      .validate(req.body)
-  } catch (e) {
-    return res.json(e.errors)
-  }
+app.use('/auth', authRoutes)
+app.use('/posts', postRoutes)
 
-  if (await User.exists({ email: req.body.email }).exec()) {
-    return res.json({
-      error: "This email is already used"
-    })
-  }
-
-  let userData = req.body
-
-  userData.password = await bcrypt.hash(userData.password, 10);
-
-  User.create(userData)
-
-  return res.json(userData)
-})
-
-app.post('/log-in', async (req, res) => {
-  try {
-    await yup.object({
-      email: yup.string().email(),
-      password: yup.string().required().min(6)
-    })
-      .validate(req.body)
-  } catch (e) {
-    return res.json(e.errors)
-  }
-
-  const user = await User.findOne({ email: req.body.email }).exec()
-
-  if (!user) return res.status(404).json({ error: "User not found" })
-
-
-  if (!bcrypt.compareSync(req.body.password, user.password)) return res.status(404).json({ error: "Incorrect password" })
-
-  return res.json(user)
-})
-
-// Blog Post CRUD
-
-app.post('/posts', async (req, res) => {
-  try {
-    await yup.object({
-      title: yup.string().required(),
-      userId: yup.string().required(),
-      body: yup.string().required()
-    })
-      .validate(req.body)
-  } catch (e) {
-    return res.json(e.errors)
-  }
-
-  const post = await Post.create({ ...req.body, slug: req.body.title.toLowerCase().replaceAll(' ', '-') })
-
-  return res.status(201).json(post)
-
-})
-
-app.get('/posts', async (req, res) => {
-  return res.json(await Post.find().exec())
-})
-
-app.get('/posts/:slug', async (req, res) => {
-  return res.json(await Post.findOne({ slug: req.params.slug }).populate('user', 'name').exec())
-})
-
-app.put('/posts/:id', async (req, res) => {
-  try {
-    await yup.object({
-      title: yup.string(),
-      userId: yup.string(),
-      body: yup.string()
-    })
-      .validate(req.body)
-  } catch (e) {
-    return res.json(e.errors)
-  }
-
-  const post = await Post.findByIdAndUpdate(req.params.id, req.body).exec()
-  return res.status(200).json({
-    message: "Post updated successfully"
-  })
-})
-
-app.delete('/posts/:id', async (req, res) => {
-  await Post.findByIdAndDelete(req.params.id).exec()
-  return res.status(204).send()
-})
 
 app.listen(8000, function () {
   console.log('Listening on port 8000');
