@@ -68,7 +68,6 @@ app.post('/log-in', async (req, res) => {
 
 app.post('/posts', async (req, res) => {
   try {
-
     await yup.object({
       title: yup.string().required(),
       userId: yup.string().required(),
@@ -93,8 +92,26 @@ app.get('/posts/:slug', async (req, res) => {
   return res.json(await Post.findOne({ slug: req.params.slug}).exec())
 })
 
+app.put('/posts/:id', async (req, res) => {
+  try {
+    await yup.object({
+      title: yup.string(),
+      userId: yup.string(),
+      body: yup.string()
+    })
+      .validate(req.body)
+  } catch (e) {
+    return res.json(e.errors)
+  }
+
+  const post = await Post.findByIdAndUpdate(req.params.id, req.body).exec()
+  return res.status(200).json({
+    message: "Post updated successfully"
+  })
+})
+
 app.delete('/posts/:id', async (req, res) => {
-  await Post.findByIdAndDelete( req.params.id).exec()
+  await Post.findByIdAndDelete(req.params.id).exec()
   return res.status(204).send()
 })
 
