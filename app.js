@@ -3,9 +3,8 @@ const mongoose = require('mongoose')
 const yup = require('yup')
 const User = require('./models/User')
 const bcrypt = require('bcrypt')
-const { compareSync } = require('bcrypt')
 const Post = require('./models/Posts')
-const req = require('express/lib/request')
+const cors = require('cors')
 require('dotenv').config()
 
 const app = express()
@@ -14,6 +13,9 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(function (e) {
     console.log('failed to connect to database', e)
   })
+
+app.use(cors())
+
 app.use(express.json())
 
 app.post('/sign-up', async (req, res) => {
@@ -78,7 +80,7 @@ app.post('/posts', async (req, res) => {
     return res.json(e.errors)
   }
 
-  const post = await Post.create({...req.body, slug: req.body.title.toLowerCase().replaceAll(' ', '-')})
+  const post = await Post.create({ ...req.body, slug: req.body.title.toLowerCase().replaceAll(' ', '-') })
 
   return res.status(201).json(post)
 
@@ -89,7 +91,7 @@ app.get('/posts', async (req, res) => {
 })
 
 app.get('/posts/:slug', async (req, res) => {
-  return res.json(await Post.findOne({ slug: req.params.slug}).exec())
+  return res.json(await Post.findOne({ slug: req.params.slug }).exec())
 })
 
 app.put('/posts/:id', async (req, res) => {
