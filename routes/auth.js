@@ -4,7 +4,8 @@ const router = express.Router();
 const User = require('./../models/User')
 const bcrypt = require('bcrypt')
 
-const yup = require('yup')
+const yup = require('yup');
+const jsonwebtoken = require("jsonwebtoken");
 
 
 router.post('/sign-up', async (req, res) => {
@@ -29,9 +30,11 @@ router.post('/sign-up', async (req, res) => {
 
   userData.password = await bcrypt.hash(userData.password, 10);
 
-  User.create(userData)
+  const user = await User.create(userData)
 
-  return res.json(userData)
+  return res.json({
+    token: generateAccessToken(user)
+  })
 })
 
 router.post('/log-in', async (req, res) => {
@@ -52,7 +55,17 @@ router.post('/log-in', async (req, res) => {
 
   if (!bcrypt.compareSync(req.body.password, user.password)) return res.status(404).json({ error: "Incorrect password" })
 
-  return res.json(user)
+  return res.json({
+    token: generateAccessToken(user)
+  })
 })
+
+function generateAccessToken(user) {
+  return jsonwebtoken.sign({
+    name: user.name,
+    id: user.id
+  }, process.env.SECRET_KEY, { expiresIn: '1800s' });
+}
+
 
 module.exports = router
