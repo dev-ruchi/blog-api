@@ -64,7 +64,7 @@ function generateAccessToken(user) {
   return jsonwebtoken.sign({
     name: user.name,
     id: user.id
-  }, process.env.SECRET_KEY, { expiresIn: '1800s' });
+  }, process.env.SECRET_KEY, { expiresIn: process.env.TOKEN_EXPIRES_IN });
 }
 
 
