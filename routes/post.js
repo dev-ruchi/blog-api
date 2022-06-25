@@ -20,7 +20,7 @@ router.post('/', auth, async (req, res) => {
   }
 
   if (await Post.exists({ title: req.body.title }).exec()) {
-    return res.status(406).json({ error: 'Title already exists' })
+    return res.status(422).json({ error: 'Title already exists' })
   }
 
   const post = await Post.create({
@@ -55,7 +55,7 @@ router.put('/:id', auth, async (req, res) => {
 
   const post = await Post.findById(req.params.id).exec()
 
-  if (post.user !== req.user.id) {
+  if (post.user.toString() !== req.user.id) {
     return res.status(403).json({
       message: "You are not allowed to update this post"
     })
@@ -70,7 +70,7 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   const post = await Post.findById(req.params.id).exec()
 
-  if (post.user !== req.user.id) {
+  if (post.user.toString() !== req.user.id) {
     return res.status(403).json({
       message: "You are not allowed to delete this post"
     })
